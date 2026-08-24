@@ -13,9 +13,13 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
     permissions:
       issues: write
+    uses: open-omics-ml/open-omics-ml/.github/workflows/validate-audit-report.yml@main
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      issue_body: ${{ github.event.issue.body }}
+    secrets: inherit
 
     steps:
       - name: Check out central repo (for validator script)
