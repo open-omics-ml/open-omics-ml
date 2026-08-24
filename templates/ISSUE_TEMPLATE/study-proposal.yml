@@ -1,0 +1,78 @@
+name: Study Proposal
+description: Propose a paper for reanalysis (external contributors and new cohort members)
+title: "Proposal: [AUTHOR] [YEAR] — [BRIEF TITLE]"
+labels: ["study-proposal"]
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to propose a paper for reanalysis. A maintainer will review your proposal
+        and confirm whether the paper is available and not already in progress.
+
+  - type: input
+    id: citation
+    attributes:
+      label: Full citation
+      description: Author(s), year, title, journal, DOI
+    validations:
+      required: true
+
+  - type: input
+    id: data_link
+    attributes:
+      label: Data availability
+      description: Link to publicly available dataset (GEO accession, Zenodo DOI, etc.)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: omics_type
+    attributes:
+      label: Omics type
+      options:
+        - Transcriptomics (bulk RNA-seq)
+        - Transcriptomics (microarray)
+        - Single-cell RNA-seq
+        - DNA methylation (array)
+        - DNA methylation (WGBS/RRBS)
+        - Genomics / SNP / WGS
+        - Proteomics
+        - Metabolomics
+        - ATAC-seq / chromatin accessibility
+        - Multi-omics
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: Why did you select this paper? Which pitfalls do you expect to find and why?
+    validations:
+      required: true
+
+  - type: input
+    id: contributor
+    attributes:
+      label: Your name and institution
+    validations:
+      required: true
+
+  - type: dropdown
+    id: code_available
+    attributes:
+      label: Is code available for the original analysis?
+      options:
+        - "Yes"
+        - "Partial"
+        - "No"
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Anything else relevant — data size, computational requirements, known challenges

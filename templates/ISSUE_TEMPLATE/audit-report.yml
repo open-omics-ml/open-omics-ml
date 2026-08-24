@@ -1,0 +1,677 @@
+name: Audit Report
+description: Open Omics ML reanalysis audit report — complete one per study
+title: "Audit Report: [AUTHOR] [YEAR] — [BRIEF TITLE]"
+labels: ["audit-report"]
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Open Omics ML Audit Report
+        Complete every section. If a section is not applicable, state this explicitly and explain why.
+        Refer to the [pitfall reference document](../../docs/pitfall-reference.md) and [student guide](../../docs/student-guide.md) before filling this in.
+
+  # ─────────────────────────────────────────
+  # SECTION 1: PAPER SUMMARY
+  # ─────────────────────────────────────────
+
+  - type: markdown
+    attributes:
+      value: "## Section 1: Paper summary"
+
+  - type: input
+    id: citation
+    attributes:
+      label: Full citation
+      description: Author(s), year, title, journal, DOI
+    validations:
+      required: true
+
+  - type: input
+    id: data_source
+    attributes:
+      label: Data source
+      description: Where data was accessed (GEO accession, URL, etc.) and date accessed
+    validations:
+      required: true
+
+  - type: dropdown
+    id: omics_type
+    attributes:
+      label: Omics type
+      options:
+        - Transcriptomics (bulk RNA-seq)
+        - Transcriptomics (microarray)
+        - Single-cell RNA-seq
+        - DNA methylation (array)
+        - DNA methylation (WGBS/RRBS)
+        - Genomics / SNP / WGS
+        - Proteomics
+        - Metabolomics
+        - ATAC-seq / chromatin accessibility
+        - Multi-omics
+        - Other (specify in notes)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ml_task
+    attributes:
+      label: ML task
+      options:
+        - Binary classification
+        - Multi-class classification
+        - Regression
+        - Survival analysis
+        - Clustering / unsupervised
+        - Other (specify in notes)
+    validations:
+      required: true
+
+  - type: input
+    id: sample_size
+    attributes:
+      label: Sample size
+      description: Total N, and class breakdown if classification
+    validations:
+      required: true
+
+  - type: input
+    id: n_features
+    attributes:
+      label: Number of features
+      description: e.g. number of genes, CpGs, proteins used as input to the model
+    validations:
+      required: true
+
+  - type: textarea
+    id: main_claim
+    attributes:
+      label: Main claim
+      description: In one or two sentences, what does the paper claim? What is the key reported result (metric and value)?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: code_available
+    attributes:
+      label: Code available?
+      options:
+        - "Yes — used"
+        - "Yes — not used (explain in notes)"
+        - "Partial"
+        - "No"
+    validations:
+      required: true
+
+  # ─────────────────────────────────────────
+  # SECTION 2: REPRODUCTION ATTEMPT
+  # ─────────────────────────────────────────
+
+  - type: markdown
+    attributes:
+      value: "## Section 2: Reproduction attempt"
+
+  - type: input
+    id: language_tools
+    attributes:
+      label: Language and key tools used
+      description: e.g. Python 3.11, scikit-learn 1.4.0, R 4.3.2, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: deviations
+    attributes:
+      label: Deviations from original methods
+      description: List every deviation, whether forced or chosen. State the reason.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_metrics
+    attributes:
+      label: Reported vs reproduced metrics
+      description: |
+        Format as a table:
+        | Metric | Reported value | Reproduced value | Difference |
+        |--------|---------------|-----------------|------------|
+        | AUC    | 0.92          | 0.89            | -0.03      |
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reproduction_verdict
+    attributes:
+      label: Reproduction verdict
+      options:
+        - Reproduced (within 5%, conclusion holds)
+        - Partially reproduced (direction consistent, >5% difference)
+        - Not reproduced (substantial difference or conclusion does not hold)
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_diagnosis
+    attributes:
+      label: Diagnosis (if not fully reproduced)
+      description: What do you believe caused the difference? Ambiguous methods, missing data, software versions, possible error?
+
+  # ─────────────────────────────────────────
+  # SECTION 3: PITFALL AUDIT
+  # ─────────────────────────────────────────
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Section 3: Pitfall audit
+        For each pitfall, select a verdict and provide evidence. Cite specific text from the methods section, supplementary materials, or code. Do not leave evidence fields blank.
+
+  - type: markdown
+    attributes:
+      value: "### Pitfall 1: No held-out test set"
+
+  - type: dropdown
+    id: p1_verdict
+    attributes:
+      label: Verdict
+      options:
+        - Present
+        - Absent
+        - Unclear
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p1_severity
+    attributes:
+      label: Severity (if present)
+      options:
+        - High
+        - Medium
+        - Low
+        - N/A
+
+  - type: textarea
+    id: p1_evidence
+    attributes:
+      label: Evidence
+      description: Quote or cite specific evidence for your verdict
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p1_affects_conclusion
+    attributes:
+      label: Plausibly affects main conclusion?
+      options:
+        - "Yes"
+        - "Possibly"
+        - "No"
+        - "Cannot determine"
+
+  - type: markdown
+    attributes:
+      value: "### Pitfall 2: Preprocessing leakage"
+
+  - type: dropdown
+    id: p2_verdict
+    attributes:
+      label: Verdict
+      options:
+        - Present
+        - Absent
+        - Unclear
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p2_severity
+    attributes:
+      label: Severity (if present)
+      options:
+        - High
+        - Medium
+        - Low
+        - N/A
+
+  - type: textarea
+    id: p2_evidence
+    attributes:
+      label: Evidence
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p2_affects_conclusion
+    attributes:
+      label: Plausibly affects main conclusion?
+      options:
+        - "Yes"
+        - "Possibly"
+        - "No"
+        - "Cannot determine"
+
+  - type: markdown
+    attributes:
+      value: "### Pitfall 3: Feature selection leakage"
+
+  - type: dropdown
+    id: p3_verdict
+    attributes:
+      label: Verdict
+      options:
+        - Present
+        - Absent
+        - Unclear
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p3_severity
+    attributes:
+      label: Severity (if present)
+      options:
+        - High
+        - Medium
+        - Low
+        - N/A
+
+  - type: textarea
+    id: p3_evidence
+    attributes:
+      label: Evidence
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p3_affects_conclusion
+    attributes:
+      label: Plausibly affects main conclusion?
+      options:
+        - "Yes"
+        - "Possibly"
+        - "No"
+        - "Cannot determine"
+
+  - type: markdown
+    attributes:
+      value: "### Pitfall 4: Non-independence of samples"
+
+  - type: dropdown
+    id: p4_verdict
+    attributes:
+      label: Verdict
+      options:
+        - Present
+        - Absent
+        - Unclear
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p4_severity
+    attributes:
+      label: Severity (if present)
+      options:
+        - High
+        - Medium
+        - Low
+        - N/A
+
+  - type: textarea
+    id: p4_evidence
+    attributes:
+      label: Evidence
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p4_affects_conclusion
+    attributes:
+      label: Plausibly affects main conclusion?
+      options:
+        - "Yes"
+        - "Possibly"
+        - "No"
+        - "Cannot determine"
+
+  - type: markdown
+    attributes:
+      value: "### Pitfall 5: Confounding variables"
+
+  - type: dropdown
+    id: p5_verdict
+    attributes:
+      label: Verdict
+      options:
+        - Present
+        - Absent
+        - Unclear
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p5_severity
+    attributes:
+      label: Severity (if present)
+      options:
+        - High
+        - Medium
+        - Low
+        - N/A
+
+  - type: textarea
+    id: p5_evidence
+    attributes:
+      label: Evidence
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p5_affects_conclusion
+    attributes:
+      label: Plausibly affects main conclusion?
+      options:
+        - "Yes"
+        - "Possibly"
+        - "No"
+        - "Cannot determine"
+
+  - type: markdown
+    attributes:
+      value: "### Pitfall 6: Class imbalance mishandling"
+
+  - type: dropdown
+    id: p6_verdict
+    attributes:
+      label: Verdict
+      options:
+        - Present
+        - Absent
+        - Unclear
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p6_severity
+    attributes:
+      label: Severity (if present)
+      options:
+        - High
+        - Medium
+        - Low
+        - N/A
+
+  - type: textarea
+    id: p6_evidence
+    attributes:
+      label: Evidence
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p6_affects_conclusion
+    attributes:
+      label: Plausibly affects main conclusion?
+      options:
+        - "Yes"
+        - "Possibly"
+        - "No"
+        - "Cannot determine"
+
+  - type: markdown
+    attributes:
+      value: "### Pitfall 7: Distributional shift"
+
+  - type: dropdown
+    id: p7_verdict
+    attributes:
+      label: Verdict
+      options:
+        - Present
+        - Absent
+        - Unclear
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p7_severity
+    attributes:
+      label: Severity (if present)
+      options:
+        - High
+        - Medium
+        - Low
+        - N/A
+
+  - type: textarea
+    id: p7_evidence
+    attributes:
+      label: Evidence
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p7_affects_conclusion
+    attributes:
+      label: Plausibly affects main conclusion?
+      options:
+        - "Yes"
+        - "Possibly"
+        - "No"
+        - "Cannot determine"
+
+  - type: markdown
+    attributes:
+      value: "### Pitfall 8: Inappropriate performance metrics"
+
+  - type: dropdown
+    id: p8_verdict
+    attributes:
+      label: Verdict
+      options:
+        - Present
+        - Absent
+        - Unclear
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p8_severity
+    attributes:
+      label: Severity (if present)
+      options:
+        - High
+        - Medium
+        - Low
+        - N/A
+
+  - type: textarea
+    id: p8_evidence
+    attributes:
+      label: Evidence
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p8_affects_conclusion
+    attributes:
+      label: Plausibly affects main conclusion?
+      options:
+        - "Yes"
+        - "Possibly"
+        - "No"
+        - "Cannot determine"
+
+  - type: markdown
+    attributes:
+      value: "### Pitfall 9: High dimensionality overfitting"
+
+  - type: dropdown
+    id: p9_verdict
+    attributes:
+      label: Verdict
+      options:
+        - Present
+        - Absent
+        - Unclear
+        - Not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p9_severity
+    attributes:
+      label: Severity (if present)
+      options:
+        - High
+        - Medium
+        - Low
+        - N/A
+
+  - type: textarea
+    id: p9_evidence
+    attributes:
+      label: Evidence
+    validations:
+      required: true
+
+  - type: dropdown
+    id: p9_affects_conclusion
+    attributes:
+      label: Plausibly affects main conclusion?
+      options:
+        - "Yes"
+        - "Possibly"
+        - "No"
+        - "Cannot determine"
+
+  # ─────────────────────────────────────────
+  # SECTION 4: REANALYSIS (PART II)
+  # ─────────────────────────────────────────
+
+  - type: markdown
+    attributes:
+      value: "## Section 4: Reanalysis (Part II)"
+
+  - type: dropdown
+    id: part2_triggered
+    attributes:
+      label: Is Part II triggered?
+      options:
+        - "Yes"
+        - "No — no medium/high severity pitfalls found"
+        - "No — original results not reproduced (cause unresolved)"
+        - "No — data or resource constraints (explain in notes)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: part2_pitfalls_addressed
+    attributes:
+      label: Pitfalls addressed in reanalysis
+      description: List which pitfalls you fixed and which you did not, with justification for each decision
+
+  - type: textarea
+    id: part2_fixes_applied
+    attributes:
+      label: Fixes applied
+      description: Describe exactly what you changed and why
+
+  - type: textarea
+    id: part2_metrics
+    attributes:
+      label: Reanalysis metrics vs original
+      description: |
+        Format as a table:
+        | Metric | Original reported | Part I reproduced | Part II reanalysis |
+        |--------|------------------|------------------|-------------------|
+        | AUC    | 0.92             | 0.89             | 0.81              |
+
+  - type: dropdown
+    id: part2_conclusion_verdict
+    attributes:
+      label: Does the main conclusion hold after reanalysis?
+      options:
+        - "Yes — conclusion robust to methodological improvements"
+        - "Partially — effect reduced but direction maintained"
+        - "No — conclusion does not hold"
+        - "N/A — Part II not conducted"
+
+  - type: textarea
+    id: part2_interpretation
+    attributes:
+      label: Interpretation
+      description: What do the reanalysis results mean for the biological question? Is the finding robust, qualified, or revised?
+
+  # ─────────────────────────────────────────
+  # SECTION 5: SUMMARY
+  # ─────────────────────────────────────────
+
+  - type: markdown
+    attributes:
+      value: "## Section 5: Summary (for meta-analysis)"
+
+  - type: textarea
+    id: summary_paragraph
+    attributes:
+      label: Summary paragraph
+      description: One paragraph suitable for inclusion in the meta-analysis paper. Describe the study, what was found in the audit, and what the reanalysis showed (if conducted). Use factual, constructive language.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: pitfalls_present_summary
+    attributes:
+      label: Pitfalls present (tick all that apply)
+      options:
+        - label: P1 — No held-out test set
+        - label: P2 — Preprocessing leakage
+        - label: P3 — Feature selection leakage
+        - label: P4 — Non-independence of samples
+        - label: P5 — Confounding variables
+        - label: P6 — Class imbalance mishandling
+        - label: P7 — Distributional shift
+        - label: P8 — Inappropriate performance metrics
+        - label: P9 — High dimensionality overfitting
+        - label: No pitfalls found
+
+  - type: dropdown
+    id: max_severity
+    attributes:
+      label: Highest severity pitfall found
+      options:
+        - High
+        - Medium
+        - Low
+        - None
+    validations:
+      required: true
+
+  - type: dropdown
+    id: overall_conclusion_change
+    attributes:
+      label: Overall conclusion change
+      options:
+        - "Conclusion robust — holds after reanalysis"
+        - "Conclusion qualified — holds with reduced effect size"
+        - "Conclusion revised — does not hold after reanalysis"
+        - "Cannot determine — Part II not conducted"
+        - "Cannot determine — reproduction failed"
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Anything else relevant that does not fit above

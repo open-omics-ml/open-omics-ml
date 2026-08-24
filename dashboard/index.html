@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Omics ML — Advancing Robust ML in Omics Research</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --neutral: #6b7280;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 2rem;
+    }
+
+    header h1 { font-size: 1.75rem; font-weight: 700; }
+    header p { opacity: 0.85; margin-top: 0.5rem; max-width: 60ch; }
+
+    .tagline {
+      font-size: 0.875rem;
+      margin-top: 0.75rem;
+      opacity: 0.7;
+      font-style: italic;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-card .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .section {
+      margin-bottom: 2.5rem;
+    }
+
+    .section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+
+    .chart-card h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pitfall-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      background: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .pitfall-table th {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      text-align: left;
+    }
+
+    .pitfall-table td {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .pitfall-table tr:hover td { background: var(--bg); }
+
+    .bar-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .bar-bg {
+      flex: 1;
+      background: var(--border);
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .bar-fill.high { background: var(--danger); }
+    .bar-fill.medium { background: var(--warning); }
+    .bar-fill.low { background: var(--success); }
+
+    .pct { font-weight: 600; min-width: 3rem; text-align: right; font-size: 0.8rem; }
+
+    .studies-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+
+    .study-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      font-size: 0.875rem;
+    }
+
+    .study-card .study-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .study-card .study-meta {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin: 0.15rem;
+    }
+
+    .badge-present { background: #fef2f2; color: var(--danger); }
+    .badge-absent { background: #f0fdf4; color: var(--success); }
+    .badge-unclear { background: #fffbeb; color: var(--warning); }
+    .badge-na { background: var(--bg); color: var(--neutral); }
+    .badge-robust { background: #f0fdf4; color: var(--success); }
+    .badge-qualified { background: #fffbeb; color: var(--warning); }
+    .badge-revised { background: #fef2f2; color: var(--danger); }
+
+    .study-card a {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.8rem;
+    }
+
+    .study-card a:hover { text-decoration: underline; }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+
+    .error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 1rem;
+      color: var(--danger);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    .generated-at { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>Open Omics ML</h1>
+    <p>A living resource tracking methodological rigour across omics machine learning research.</p>
+    <p class="tagline">Celebrating ambitious science — and building on it.</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div id="loading" class="loading">Loading dashboard data…</div>
+  <div id="error" class="error" style="display:none"></div>
+  <div id="content" style="display:none">
+
+    <!-- Summary stats -->
+    <div class="section">
+      <div class="stats-row" id="stats-row"></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="section">
+      <h2>Overview</h2>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Reproduction verdicts</h3>
+          <canvas id="reproduction-chart" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Conclusion after reanalysis</h3>
+          <canvas id="conclusion-chart" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Omics types</h3>
+          <canvas id="omics-chart" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Severity distribution</h3>
+          <canvas id="severity-chart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pitfall prevalence -->
+    <div class="section">
+      <h2>Pitfall prevalence</h2>
+      <table class="pitfall-table" id="pitfall-table">
+        <thead>
+          <tr>
+            <th>Pitfall</th>
+            <th>Studies affected</th>
+            <th>Prevalence</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Individual studies -->
+    <div class="section">
+      <h2>Studies</h2>
+      <div class="studies-grid" id="studies-grid"></div>
+    </div>
+
+    <p class="generated-at" id="generated-at"></p>
+
+  </div>
+</div>
+
+<footer>
+  Open Omics ML · UCL Division of Biosciences ·
+  <a href="https://github.com/open-omics-ml">GitHub</a>
+</footer>
+
+<script>
+  const PITFALL_KEYS = ['p1','p2','p3','p4','p5','p6','p7','p8','p9'];
+
+  function verdictBadge(verdict) {
+    if (!verdict) return '';
+    const v = verdict.toLowerCase();
+    if (v.includes('present')) return `<span class="badge badge-present">Present</span>`;
+    if (v.includes('absent')) return `<span class="badge badge-absent">Absent</span>`;
+    if (v.includes('unclear')) return `<span class="badge badge-unclear">Unclear</span>`;
+    return `<span class="badge badge-na">N/A</span>`;
+  }
+
+  function conclusionBadge(verdict) {
+    if (!verdict) return '';
+    const v = verdict.toLowerCase();
+    if (v.includes('robust')) return `<span class="badge badge-robust">Robust</span>`;
+    if (v.includes('qualified')) return `<span class="badge badge-qualified">Qualified</span>`;
+    if (v.includes('revised')) return `<span class="badge badge-revised">Revised</span>`;
+    return `<span class="badge badge-na">TBD</span>`;
+  }
+
+  function makeDonut(id, labels, values, colors) {
+    new Chart(document.getElementById(id), {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: colors, borderWidth: 2 }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+        cutout: '60%',
+      }
+    });
+  }
+
+  async function loadDashboard() {
+    try {
+      const res = await fetch('data.json');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderDashboard(data);
+    } catch (e) {
+      document.getElementById('loading').style.display = 'none';
+      const err = document.getElementById('error');
+      err.style.display = 'block';
+      err.textContent = `Could not load dashboard data: ${e.message}. ` +
+        `If you are viewing this locally, run the build script first.`;
+    }
+  }
+
+  function renderDashboard(data) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+
+    const s = data.summary;
+    const studies = data.studies || [];
+
+    // Stats row
+    const totalPitfallsPresent = Object.values(s.pitfall_prevalence || {})
+      .reduce((acc, p) => acc + p.count, 0);
+    const avgPitfalls = studies.length
+      ? (totalPitfallsPresent / studies.length).toFixed(1)
+      : 0;
+
+    const statsHtml = [
+      { value: s.total_studies || 0, label: 'Studies reanalysed' },
+      { value: avgPitfalls, label: 'Avg pitfalls per study' },
+      { value: s.reproduction_verdicts?.['Reproduced'] || 0, label: 'Fully reproduced' },
+      { value: s.conclusion_changes?.['Robust'] || 0, label: 'Conclusions robust' },
+      { value: s.severity_distribution?.['High'] || 0, label: 'High severity pitfalls' },
+    ].map(stat => `
+      <div class="stat-card">
+        <div class="value">${stat.value}</div>
+        <div class="label">${stat.label}</div>
+      </div>
+    `).join('');
+    document.getElementById('stats-row').innerHTML = statsHtml;
+
+    // Reproduction chart
+    const repData = s.reproduction_verdicts || {};
+    makeDonut('reproduction-chart',
+      Object.keys(repData), Object.values(repData),
+      ['#16a34a', '#d97706', '#dc2626', '#9ca3af']
+    );
+
+    // Conclusion chart
+    const conData = s.conclusion_changes || {};
+    makeDonut('conclusion-chart',
+      Object.keys(conData), Object.values(conData),
+      ['#16a34a', '#d97706', '#dc2626', '#9ca3af']
+    );
+
+    // Omics chart
+    const omicsData = s.omics_types || {};
+    makeDonut('omics-chart',
+      Object.keys(omicsData), Object.values(omicsData),
+      ['#2563eb','#7c3aed','#db2777','#ea580c','#65a30d','#0891b2','#6366f1','#f59e0b','#10b981']
+    );
+
+    // Severity chart
+    const sevData = s.severity_distribution || {};
+    makeDonut('severity-chart',
+      Object.keys(sevData), Object.values(sevData),
+      ['#dc2626', '#d97706', '#16a34a', '#9ca3af']
+    );
+
+    // Pitfall table
+    const prevData = s.pitfall_prevalence || {};
+    const tbody = document.querySelector('#pitfall-table tbody');
+    tbody.innerHTML = Object.entries(prevData)
+      .sort((a, b) => b[1].count - a[1].count)
+      .map(([key, p]) => {
+        const pct = p.percent || 0;
+        const colorClass = pct >= 50 ? 'high' : pct >= 25 ? 'medium' : 'low';
+        return `
+          <tr>
+            <td>${p.name}</td>
+            <td>${p.count} / ${s.total_studies}</td>
+            <td>
+              <div class="bar-container">
+                <div class="bar-bg">
+                  <div class="bar-fill ${colorClass}" style="width:${pct}%"></div>
+                </div>
+                <span class="pct">${pct}%</span>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+    // Studies grid
+    const grid = document.getElementById('studies-grid');
+    grid.innerHTML = studies.map(study => {
+      const pitfallBadges = PITFALL_KEYS
+        .map(k => verdictBadge(study.pitfalls?.[k]?.verdict))
+        .join('');
+      return `
+        <div class="study-card">
+          <div class="study-title">${study.citation || 'Untitled study'}</div>
+          <div class="study-meta">
+            ${study.omics_type || ''} · ${study.ml_task || ''} · n=${study.sample_size || '?'}
+          </div>
+          <div style="margin-bottom:0.5rem">
+            ${conclusionBadge(study.overall_conclusion_change)}
+          </div>
+          <div style="margin-bottom:0.75rem">${pitfallBadges}</div>
+          <div>${study.summary_paragraph ? study.summary_paragraph.slice(0, 180) + '…' : ''}</div>
+          <div style="margin-top:0.75rem">
+            <a href="${study.issue_url}" target="_blank">View full report →</a>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Generated at
+    if (s.generated_at) {
+      document.getElementById('generated-at').textContent =
+        `Dashboard last updated: ${new Date(s.generated_at).toLocaleString()}`;
+    }
+  }
+
+  loadDashboard();
+</script>
+
+</body>
+</html>
