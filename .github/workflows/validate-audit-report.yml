@@ -1,4 +1,3 @@
-# open-omics-ml/.github/workflows/validate-audit-report.yml
 name: Validate Audit Report (reusable)
 
 on:
@@ -13,22 +12,19 @@ on:
 
 jobs:
   validate:
+    runs-on: ubuntu-latest
     permissions:
       issues: write
-    uses: open-omics-ml/open-omics-ml/.github/workflows/validate-audit-report.yml@main
-    with:
-      issue_number: ${{ github.event.issue.number }}
-      issue_body: ${{ github.event.issue.body }}
-    secrets: inherit
 
     steps:
-      - name: Check out central repo (for validator script)
+      - name: Check out central repo
         uses: actions/checkout@v4
         with:
           repository: open-omics-ml/open-omics-ml
           token: ${{ secrets.VALIDATOR_TOKEN }}
 
       - name: Run validator
+        id: validate
         env:
           ISSUE_BODY: ${{ inputs.issue_body }}
         run: python scripts/validate_audit_report.py
@@ -52,7 +48,8 @@ jobs:
         with:
           github-token: ${{ secrets.VALIDATOR_TOKEN }}
           script: |
-            const passed = ${{ steps.validate.outputs.passed == 'true' }};
+            const fs = require('fs');
+            const passed = fs.readFileSync(process.env.GITHUB_OUTPUT, 'utf8').includes('passed=true');
             const label = passed ? 'awaiting-supervisor-review' : 'needs-revision';
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
