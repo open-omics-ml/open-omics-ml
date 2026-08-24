@@ -1,5 +1,7 @@
 # Open Omics ML
 
+*This is a first draft of an idea. Text mostly written by Claude. Details may be inaccurate*
+
 **What can modern machine learning tell us about omics biology?**
 
 Open Omics ML is a community project that applies current best-practice ML methods to published omics datasets, building on the biological questions that motivated the original studies. We follow the tradition of the [ReproHack community](https://www.reprohack.org/) in treating reanalysis as a positive scientific activity — valuable for authors, participants, and the field.
@@ -8,19 +10,17 @@ This project is pre-registered on OSF [DOI: to be added] and all materials are r
 
 ## The scientific question
 
-Machine learning has transformed omics research, but methods best practices — proper train/test separation, confounder correction, appropriate performance metrics — have evolved rapidly. Many studies were conducted before these practices were established. We ask: **when we apply rigorous modern ML to the same datasets, what do they tell us?**
-
-The reanalysis framework is the method. The biology is the point.
+Machine learning has transformed omics research and methods best practices — proper train/test separation, confounder correction, appropriate performance metrics — have evolved rapidly. We ask: **when we apply new models and workflows to the same datasets, what more can we learn?**
 
 ## Who this is for
 
-Open Omics ML is designed for three kinds of participants:
+Open Omics ML is designed for a variety of participants:
 
 **Students** conducting reanalyses as undergraduate or postgraduate research projects. This is a genuine learning experience in applied ML and open science, with real scientific outputs and co-authorship opportunities.
 
 **New lab members and collaborators** getting up to speed with a dataset, method, or analysis approach. Reanalysing a published study is an excellent onboarding activity.
 
-**Researchers seeking feedback** who want community input on an analysis approach before committing to a full study. The Open Omics ML framework is a structured way to stress-test your methods openly.
+**Researchers seeking feedback** who want community input on an analysis approach before committing to a full study.
 
 ## What we do
 
@@ -37,12 +37,11 @@ Results are aggregated into a living dashboard. Together, reanalyses form the ba
 
 Following the ReproHack community, we hold that reanalysis is "beneficial scientific activity in itself, with useful outcomes for authors and valuable learning experiences for participants and the research community as a whole."
 
-Reanalysis here is a scientific contribution, not an audit. The studies we build on asked important biological questions. We extend them with updated methods. See our [Code of Conduct](CODE_OF_CONDUCT.md) for the expectations this places on all participants.
+Reanalysis here is a scientific contribution, not an audit. The studies we build on asked important biological questions and used novel and innovative approaches. We recognise the importance of the work and celebrate it by trying to generate more value from the original papers. This is laid out in our [Code of Conduct](CODE_OF_CONDUCT.md), which sets expectations of all participants.
 
 ## Guiding principles
 
-- **The biology first.** The scientific question is what omics data can tell us with robust ML. Methodological observations are in service of that question.
-- **Build, don't tear down.** We extend prior work, not criticise it.
+- **The biology first.** The scientific question is what omics data can tell us about biology when combined with robust ML.
 - **Open science throughout.** Pre-registered methodology, public code, CC-BY-SA licence, open contributions.
 - **Learning experience.** This is designed to be a positive, skill-building experience for all participants.
 - **Community-owned.** Contributions are welcome — reanalyses, pipeline improvements, framework suggestions.
