@@ -27,11 +27,11 @@ Open Omics ML is designed for a variety of participants:
 Each contributing analyst selects a published omics ML study with publicly available data, then:
 
 1. **Reproduces** the original analysis as closely as possible
-2. **Audits** the analysis against a defined checklist of methodological considerations drawn from the omics ML literature
-3. **Reanalyses** using current best-practice methods, asking what the data show with more rigorous ML
+2. **Assesses** the analysis against a defined checklist of methodological considerations drawn from the omics ML literature
+3. **Reanalyses** using current best-practice methods, asking what the data show when analysed with new methods
 4. **Reports** findings in a standardised format that feeds into a field-wide summary
 
-Results are aggregated into a living dashboard. Together, reanalyses form the basis of a co-authored meta-analysis of what omics datasets reveal under rigorous ML.
+Results are aggregated into a living dashboard. Together, reanalyses form the basis of a co-authored meta-analysis of what omics datasets reveal.
 
 ## What reanalysis is — and is not
 
