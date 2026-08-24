@@ -58,9 +58,9 @@ A maintainer will confirm the paper is not already in progress and create a repo
 
 Follow the [student guide](student-guide.md) and [pipeline guide](pipeline-guide.md). External contributors are held to the same standards as internal contributors.
 
-### 4. Submit your audit report
+### 4. Submit your assessment report
 
-Open an audit report issue in your repo using the standard template. Tag a maintainer for review.
+Open an assessment report issue in your repo using the standard template. Tag a maintainer for review.
 
 ### 5. Review process
 
