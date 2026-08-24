@@ -21,7 +21,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: open-omics-ml/open-omics-ml
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run validator
         id: validate
