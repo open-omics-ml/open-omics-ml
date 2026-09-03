@@ -27,13 +27,12 @@ body:
       required: true
 
   - type: input
-id: processed_data
-attributes:
-  label: Processed data availability
-  description: Are the process data available? E.g. methylation calls, gene expression counts
-validations:
-  required: true
-
+    id: processed_data
+    attributes:
+      label: Processed data availability
+      description: Are the process data available? E.g. methylation calls, gene expression counts
+    validations:
+      required: true
 
   - type: dropdown
     id: omics_type
