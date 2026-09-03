@@ -1,7 +1,7 @@
 """
-Open Omics ML audit report validator.
+Open Omics ML report validator.
 
-Parses a GitHub issue body (from the audit-report template) and checks
+Parses a GitHub issue body (from the assessment-report template) and checks
 that all required fields are completed. Writes a validation result
 as a markdown comment and sets a GitHub Actions output.
 """
@@ -104,7 +104,7 @@ VALID_OPTIONS = {
 
 def parse_issue_body(body: str) -> dict:
     """
-    Parse a GitHub issue body created from the audit-report.yml template.
+    Parse a GitHub issue body created from the assessment-report.yml template.
     The template renders as sections with ### headings and field values below.
     Returns a dict of field_id -> value.
     """
@@ -145,14 +145,14 @@ def parse_issue_body(body: str) -> dict:
 
 def validate(body: str) -> tuple[bool, list[str], list[str]]:
     """
-    Validate an audit report issue body.
+    Validate a report issue body.
     Returns (passed, errors, warnings).
     """
     errors = []
     warnings = []
 
     if not body or len(body.strip()) < 100:
-        errors.append("Issue body is empty or too short — did you use the audit report template?")
+        errors.append("Issue body is empty or too short — did you use the assessment report template?")
         return False, errors, warnings
 
     fields = parse_issue_body(body)
@@ -211,14 +211,14 @@ def write_output(passed: bool, errors: list[str], warnings: list[str]):
     # Write markdown comment
     lines = []
     if passed:
-        lines.append("## ✅ Audit report validation passed")
+        lines.append("## ✅ report validation passed")
         lines.append("")
         lines.append(
             "All required fields are complete. Your supervisor has been notified. "
             "You can now request a review."
         )
     else:
-        lines.append("## ❌ Audit report needs revision")
+        lines.append("## ❌ report needs revision")
         lines.append("")
         lines.append(
             f"Found **{len(errors)} error(s)** that must be fixed before this report can be accepted."
