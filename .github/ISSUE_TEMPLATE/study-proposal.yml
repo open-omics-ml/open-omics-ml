@@ -60,7 +60,7 @@ body:
       description: Why did you select this paper? Which pitfalls do you expect to find and why?
     validations:
       required: true
-
+      
   - type: input
     id: contributorname
     attributes:
