@@ -653,7 +653,7 @@ body:
         - High
         - Medium
         - Low
-        - None
+        - No pitfalls
     validations:
       required: true
 
