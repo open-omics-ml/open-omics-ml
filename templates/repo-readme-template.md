@@ -23,7 +23,7 @@
 │   └── download.sh          # Script to reproduce data download
 ├── notebooks/
 │   ├── 01_reproduction.ipynb    # Part I: reproduction attempt
-│   ├── 02_audit.ipynb           # Supporting analysis for audit
+│   ├── 02_assessment.ipynb           # Supporting analysis for assessment
 │   └── 03_reanalysis.ipynb      # Part II: reanalysis (if triggered)
 ├── scripts/                     # Standalone scripts extracted from notebooks
 ├── results/
@@ -78,7 +78,7 @@ Notes: [Any discrepancies between available data and what the paper describes]
 
 ---
 
-## Audit summary
+## Assessment summary
 
 | Pitfall | Verdict | Severity |
 |---------|---------|----------|
@@ -92,7 +92,7 @@ Notes: [Any discrepancies between available data and what the paper describes]
 | P8: Inappropriate metrics | | |
 | P9: High-dim overfitting | | |
 
-Full audit report: [Link to issue]
+Full assessment report: [Link to issue]
 
 ---
 
