@@ -1,58 +1,50 @@
-name: Validate Audit Report (reusable)
+name: Validate Report
 
 on:
-  workflow_call:
-    inputs:
-      issue_number:
-        required: true
-        type: number
-      issue_body:
-        required: true
-        type: string
+  issues:
+    types: [opened, edited]
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     permissions:
       issues: write
-
     steps:
-      - name: Check out central repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
-          repository: open-omics-ml/open-omics-ml
+          python-version: '3.11'
 
       - name: Run validator
         id: validate
         env:
-          ISSUE_BODY: ${{ inputs.issue_body }}
-        run: python scripts/validate_audit_report.py
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python scripts/validate_report.py
 
       - name: Post comment
+        if: steps.validate.outputs.is_report == 'true'
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const body = fs.readFileSync('validation_result.md', 'utf8');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: ${{ inputs.issue_number }},
-              body
+              issue_number: context.issue.number,
+              body: fs.readFileSync('validation_result.md', 'utf8')
             });
 
       - name: Apply label
+        if: steps.validate.outputs.is_report == 'true'
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
-            const passed = fs.readFileSync(process.env.GITHUB_OUTPUT, 'utf8').includes('passed=true');
-            const label = passed ? 'awaiting-supervisor-review' : 'needs-revision';
+            const label = '${{ steps.validate.outputs.passed }}' === 'true'
+              ? 'awaiting-supervisor-review' : 'needs-revision';
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: ${{ inputs.issue_number }},
+              issue_number: context.issue.number,
               labels: [label]
             });
