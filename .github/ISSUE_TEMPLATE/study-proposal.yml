@@ -57,7 +57,7 @@ body:
     id: rationale
     attributes:
       label: Rationale
-      description: Why did you select this paper? Which pitfalls do you expect to find and why?
+      description: Why did you select this paper? What do you expect a current ML approach to add?
     validations:
       required: true
       
