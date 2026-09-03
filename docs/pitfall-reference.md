@@ -18,7 +18,7 @@ This list is synthesised primarily from Whalen et al. (2022, *Nature Reviews Gen
 
 ## How to use this document
 
-For each consideration, record one of four verdicts in your audit report:
+For each consideration, record one of four verdicts in your assessment report:
 
 - **Present** — you have clear evidence this consideration applies to the original analysis
 - **Absent** — you have clear evidence it does not apply
