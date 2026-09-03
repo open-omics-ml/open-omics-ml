@@ -68,7 +68,7 @@ body:
     validations:
       required: true
 
-    - type: input
+  - type: input
     id: contributorinstitution
     attributes:
       label: Institution
