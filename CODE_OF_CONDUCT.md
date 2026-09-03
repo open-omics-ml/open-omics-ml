@@ -29,7 +29,7 @@ Reanalysis within this project means applying current best-practice ML methods t
 
 It is **not**:
 
-- An audit, investigation, or criticism of the original authors
+- An assessment, investigation, or criticism of the original authors
 - A judgement on the quality or integrity of prior research
 - An attempt to discredit findings
 
