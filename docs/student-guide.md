@@ -65,19 +65,7 @@ If you are unsure whether your paper qualifies, open an issue in the central `op
 
 ---
 
-## Step 2: OSF pre-registration
-
-Before any analysis begins, register your study on the Open Science Framework (OSF). This is a required step — your supervisor will not approve paper selection until the pre-registration is submitted.
-
-Your pre-registration should cover:
-- The paper you are reanalysing (citation, DOI, data source)
-- Which pitfalls you predict you will find, based on reading the methods section
-- Your reproduction plan (tools, approach)
-- Your intended reanalysis approach if pitfalls are found
-
-Go to [osf.io](https://osf.io), create a free account, and register a new project. Use the "OSF Preregistration" template. Link your registration DOI in your repo README once complete.
-
-Predictions do not need to be correct — the purpose is to commit to them before seeing results, not to get them right. Deviations from your pre-registered plan should be documented and justified in your assessment report.
+## Step 2: **REMOVED**
 
 ## Step 3: Set up your repo
 
@@ -148,7 +136,7 @@ If not reproduced, diagnose why before proceeding. Common causes:
 
 ---
 
-## Step 6: Pitfall assessment
+## Step 6: Methods assessment
 
 Work through each of the nine pitfalls in the [pitfall reference document](pitfall-reference.md). For each:
 
