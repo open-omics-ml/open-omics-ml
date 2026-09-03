@@ -1,269 +1,361 @@
 """
 Open Omics ML report validator.
 
-Parses a GitHub issue body (from the assessment-report template) and checks
-that all required fields are completed. Writes a validation result
-as a markdown comment and sets a GitHub Actions output.
+Parses a report issue body and checks that all required fields are completed.
+Writes the result as a markdown comment and sets a GitHub Actions output.
+
+The FIELDS table below is the single source of truth. It defines both:
+  - what the validator looks for, and
+  - the markdown template students draft in.
+
+Run `python validate_report.py --emit-template` to print the drafting template.
+Because both come from the same table, the headings cannot drift apart.
 """
 
 import os
 import re
-import json
+import sys
 
 # ─────────────────────────────────────────────────────────────────────────────
-# REQUIRED FIELDS
-# Each entry is (field_id, human_readable_name, section)
-# These must be present and non-empty in the issue body
+# FIELD TABLE — single source of truth
+#
+# id        : key used internally
+# heading   : the exact "### " heading in the issue body
+# section   : grouping, used in error messages and the template
+# required  : True | False | "part2"  ("part2" = required only if Part II ran)
+# min_length: minimum characters, if any
+# options   : permitted values, if constrained
+# hint      : placeholder text shown in the generated template
 # ─────────────────────────────────────────────────────────────────────────────
 
-REQUIRED_FIELDS = [
-    # Section 1
-    ("citation", "Full citation", "Section 1"),
-    ("data_source", "Data source", "Section 1"),
-    ("omics_type", "Omics type", "Section 1"),
-    ("ml_task", "ML task", "Section 1"),
-    ("sample_size", "Sample size", "Section 1"),
-    ("n_features", "Number of features", "Section 1"),
-    ("main_claim", "Main claim", "Section 1"),
-    ("code_available", "Code available", "Section 1"),
-    # Section 2
-    ("language_tools", "Language and tools", "Section 2"),
-    ("deviations", "Deviations from original methods", "Section 2"),
-    ("reproduction_metrics", "Reported vs reproduced metrics", "Section 2"),
-    ("reproduction_verdict", "Reproduction verdict", "Section 2"),
-    # Section 3 — all pitfall verdicts and evidence
-    ("p1_verdict", "Pitfall 1 verdict", "Section 3"),
-    ("p1_evidence", "Pitfall 1 evidence", "Section 3"),
-    ("p2_verdict", "Pitfall 2 verdict", "Section 3"),
-    ("p2_evidence", "Pitfall 2 evidence", "Section 3"),
-    ("p3_verdict", "Pitfall 3 verdict", "Section 3"),
-    ("p3_evidence", "Pitfall 3 evidence", "Section 3"),
-    ("p4_verdict", "Pitfall 4 verdict", "Section 3"),
-    ("p4_evidence", "Pitfall 4 evidence", "Section 3"),
-    ("p5_verdict", "Pitfall 5 verdict", "Section 3"),
-    ("p5_evidence", "Pitfall 5 evidence", "Section 3"),
-    ("p6_verdict", "Pitfall 6 verdict", "Section 3"),
-    ("p6_evidence", "Pitfall 6 evidence", "Section 3"),
-    ("p7_verdict", "Pitfall 7 verdict", "Section 3"),
-    ("p7_evidence", "Pitfall 7 evidence", "Section 3"),
-    ("p8_verdict", "Pitfall 8 verdict", "Section 3"),
-    ("p8_evidence", "Pitfall 8 evidence", "Section 3"),
-    ("p9_verdict", "Pitfall 9 verdict", "Section 3"),
-    ("p9_evidence", "Pitfall 9 evidence", "Section 3"),
-    # Section 4
-    ("part2_triggered", "Part II triggered", "Section 4"),
-    # Section 5
-    ("summary_paragraph", "Summary paragraph", "Section 5"),
-    ("max_severity", "Highest severity pitfall", "Section 5"),
-    ("overall_conclusion_change", "Overall conclusion change", "Section 5"),
+VERDICT_OPTIONS = ["Present", "Absent", "Unclear", "Not applicable"]
+
+FIELDS = [
+    # ── Section 1 — the original study ──────────────────────────────────────
+    dict(id="citation", heading="Full citation", section="Section 1",
+         required=True, hint="Author(s), year, title, journal, DOI"),
+    dict(id="data_source", heading="Data source", section="Section 1",
+         required=True, hint="GEO accession, Zenodo DOI, repository URL"),
+    dict(id="omics_type", heading="Omics type", section="Section 1",
+         required=True, hint="e.g. Bulk RNA-seq"),
+    dict(id="ml_task", heading="ML task", section="Section 1",
+         required=True, hint="e.g. Binary classification of tumour vs normal"),
+    dict(id="sample_size", heading="Sample size", section="Section 1",
+         required=True, hint="n = ..., with group breakdown if relevant"),
+    dict(id="n_features", heading="Number of features", section="Section 1",
+         required=True, hint="Features entering the model"),
+    dict(id="main_claim", heading="Main claim", section="Section 1",
+         required=True, min_length=50,
+         hint="The central claim, stated as the original authors would state it"),
+    dict(id="code_available", heading="Code available", section="Section 1",
+         required=True, options=["Yes", "Partial", "No"]),
+
+    # ── Section 2 — reproducing the original analysis ───────────────────────
+    dict(id="language_tools", heading="Language and tools", section="Section 2",
+         required=True, hint="e.g. Python 3.11, scikit-learn 1.4"),
+    dict(id="deviations", heading="Deviations from original methods", section="Section 2",
+         required=True, min_length=30,
+         hint="Anything you had to do differently, and why"),
+    dict(id="reproduction_metrics", heading="Reported vs reproduced metrics", section="Section 2",
+         required=True, min_length=50,
+         hint="Side by side, with the metric named"),
+    dict(id="reproduction_verdict", heading="Reproduction verdict", section="Section 2",
+         required=True, options=[
+             "Reproduced — results consistent, conclusion holds",
+             "Partially reproduced — direction consistent, magnitude differs",
+             "Not reproduced — results differ substantially or conclusion does not hold",
+         ]),
+
+    # ── Section 3 — methodological considerations (added below) ─────────────
+
+    # ── Section 4 — extended reanalysis ─────────────────────────────────────
+    dict(id="part2_triggered", heading="Part II triggered", section="Section 4",
+         required=True, options=["Yes", "No"]),
+    dict(id="part2_considerations_addressed", heading="Part II considerations addressed",
+         section="Section 4", required="part2",
+         hint="Which considerations the reanalysis addresses"),
+    dict(id="part2_fixes_applied", heading="Part II changes applied", section="Section 4",
+         required="part2", hint="What you changed and why"),
+    dict(id="part2_metrics", heading="Part II metrics", section="Section 4",
+         required="part2", hint="Original vs reanalysed, side by side"),
+    dict(id="part2_conclusion_verdict", heading="Part II conclusion verdict",
+         section="Section 4", required="part2"),
+    dict(id="part2_interpretation", heading="Part II interpretation", section="Section 4",
+         required="part2", hint="What this adds to the original finding"),
+
+    # ── Section 5 — summary ─────────────────────────────────────────────────
+    dict(id="summary_paragraph", heading="Summary paragraph", section="Section 5",
+         required=True, min_length=100,
+         hint="One paragraph a reader could take away without reading the rest"),
+    dict(id="max_severity", heading="Highest severity consideration", section="Section 5",
+         required=True, options=["High", "Medium", "Low", "None"]),
+    dict(id="overall_conclusion_change", heading="Overall conclusion change", section="Section 5",
+         required=True, options=[
+             "Conclusion robust — holds after reanalysis",
+             "Conclusion qualified — holds with reduced effect size",
+             "Conclusion revised — does not hold after reanalysis",
+             "Cannot determine — Part II not conducted",
+             "Cannot determine — reproduction not achieved",
+         ]),
 ]
 
-# Fields that must not be placeholder/too short
-MIN_LENGTH = {
-    "main_claim": 50,
-    "deviations": 30,
-    "reproduction_metrics": 50,
-    "p1_evidence": 20,
-    "p2_evidence": 20,
-    "p3_evidence": 20,
-    "p4_evidence": 20,
-    "p5_evidence": 20,
-    "p6_evidence": 20,
-    "p7_evidence": 20,
-    "p8_evidence": 20,
-    "p9_evidence": 20,
-    "summary_paragraph": 100,
+# ─────────────────────────────────────────────────────────────────────────────
+# Section 3 — one verdict / evidence / severity triplet per consideration.
+# Edit CONSIDERATIONS to rename them; headings and validation follow.
+# ─────────────────────────────────────────────────────────────────────────────
+
+CONSIDERATIONS = {
+    1: "No held-out test set",
+    2: "Feature selection before splitting",
+    3: "Preprocessing before splitting",
+    4: "Duplicate or related samples across splits",
+    5: "Batch effects confounded with outcome",
+    6: "Class imbalance not accounted for",
+    7: "Hyperparameters tuned on the test set",
+    8: "Metric inappropriate for the task",
+    9: "No comparison against a simple baseline",
 }
 
-# Valid options for dropdown fields
-VALID_OPTIONS = {
-    "reproduction_verdict": [
-        "Reproduced (within 5%, conclusion holds)",
-        "Partially reproduced (direction consistent, >5% difference)",
-        "Not reproduced (substantial difference or conclusion does not hold)",
-    ],
-    "p1_verdict": ["Present", "Absent", "Unclear", "Not applicable"],
-    "p2_verdict": ["Present", "Absent", "Unclear", "Not applicable"],
-    "p3_verdict": ["Present", "Absent", "Unclear", "Not applicable"],
-    "p4_verdict": ["Present", "Absent", "Unclear", "Not applicable"],
-    "p5_verdict": ["Present", "Absent", "Unclear", "Not applicable"],
-    "p6_verdict": ["Present", "Absent", "Unclear", "Not applicable"],
-    "p7_verdict": ["Present", "Absent", "Unclear", "Not applicable"],
-    "p8_verdict": ["Present", "Absent", "Unclear", "Not applicable"],
-    "p9_verdict": ["Present", "Absent", "Unclear", "Not applicable"],
-    "max_severity": ["High", "Medium", "Low", "None"],
-    "overall_conclusion_change": [
-        "Conclusion robust — holds after reanalysis",
-        "Conclusion qualified — holds with reduced effect size",
-        "Conclusion revised — does not hold after reanalysis",
-        "Cannot determine — Part II not conducted",
-        "Cannot determine — reproduction failed",
-    ],
-}
+_section3 = []
+for _n, _name in CONSIDERATIONS.items():
+    _section3.append(dict(
+        id=f"p{_n}_verdict", heading=f"Consideration {_n} verdict", section="Section 3",
+        required=True, options=VERDICT_OPTIONS, note=_name))
+    _section3.append(dict(
+        id=f"p{_n}_evidence", heading=f"Consideration {_n} evidence", section="Section 3",
+        required=True, min_length=20,
+        hint="Quote or point to the part of the paper this rests on"))
+    _section3.append(dict(
+        id=f"p{_n}_severity", heading=f"Consideration {_n} severity", section="Section 3",
+        required=False, options=["High", "Medium", "Low"],
+        hint="Required if the verdict is Present"))
+
+# Splice Section 3 in before Section 4
+_s4_start = next(i for i, f in enumerate(FIELDS) if f["section"] == "Section 4")
+FIELDS = FIELDS[:_s4_start] + _section3 + FIELDS[_s4_start:]
+
+# Derived lookups — never hand-maintained
+HEADING_TO_ID = {f["heading"]: f["id"] for f in FIELDS}
+BY_ID = {f["id"]: f for f in FIELDS}
+
+EMPTY_VALUES = {"", "_no response_", "none", "n/a", "tbd", "..."}
 
 
-def parse_issue_body(body: str) -> dict:
+# ─────────────────────────────────────────────────────────────────────────────
+# Parsing
+# ─────────────────────────────────────────────────────────────────────────────
+
+def parse_issue_body(body: str) -> tuple[dict, list[str]]:
     """
-    Parse a GitHub issue body created from the assessment-report.yml template.
-    The template renders as sections with ### headings and field values below.
-    Returns a dict of field_id -> value.
+    Split an issue body on '### ' headings and map each to a known field id.
+
+    Returns (fields, unmatched_headings). Headings that are not in the field
+    table are reported rather than silently dropped — a reworded heading
+    otherwise looks identical to an empty field.
     """
     fields = {}
+    unmatched = []
 
-    # GitHub issue forms render as:
-    # ### Field Label
-    #
-    # Field value
-    #
-    # ### Next Field Label
-    # ...
-
-    # Split into blocks by ### headings
-    blocks = re.split(r'\n### ', body)
+    blocks = re.split(r'(?m)^### ', body)
+    if not body.lstrip().startswith('### '):
+        blocks = blocks[1:]  # anything before the first heading is preamble
 
     for block in blocks:
         if not block.strip():
             continue
         lines = block.strip().split('\n')
-        if not lines:
-            continue
-        # First line is the field label
-        label = lines[0].strip().lstrip('#').strip()
-        # Rest is the value (skip blank lines at start)
+        heading = lines[0].strip()
+
+        # Value is everything up to the next heading of any level
         value_lines = []
         for line in lines[1:]:
-            if line.strip() or value_lines:  # skip leading blanks
+            if line.lstrip().startswith('#'):
+                break
+            if line.strip() or value_lines:
                 value_lines.append(line)
-        value = '\n'.join(value_lines).strip()
+        # Drop template hints so they are never mistaken for answers
+        value = re.sub(r'<!--.*?-->', '', '\n'.join(value_lines), flags=re.S).strip()
 
-        # Map label to field id (simple normalisation)
-        field_id = label.lower().replace(' ', '_').replace('(', '').replace(')', '').replace('?', '').replace('/', '_')
+        field_id = HEADING_TO_ID.get(heading)
+        if field_id is None:
+            unmatched.append(heading)
+            continue
         fields[field_id] = value
 
-    return fields
+    return fields, unmatched
+
+
+def _is_empty(value: str) -> bool:
+    return value.strip().lower() in EMPTY_VALUES
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Validation
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _check_one(field: dict, value: str, errors: list[str]):
+    """Check a single populated field against its constraints."""
+    name, section = field["heading"], field["section"]
+
+    if "min_length" in field and len(value) < field["min_length"]:
+        errors.append(
+            f"**{section}:** '{name}' looks brief "
+            f"({len(value)} characters, expected at least {field['min_length']}). "
+            f"Please expand."
+        )
+        return
+
+    if "options" in field:
+        if not any(opt.lower() in value.lower() for opt in field["options"]):
+            errors.append(
+                f"**{section}:** '{name}' has an unexpected value: '{value[:80]}'. "
+                f"Expected one of: {', '.join(field['options'])}"
+            )
 
 
 def validate(body: str) -> tuple[bool, list[str], list[str]]:
-    """
-    Validate a report issue body.
-    Returns (passed, errors, warnings).
-    """
-    errors = []
-    warnings = []
+    """Validate a report issue body. Returns (passed, errors, warnings)."""
+    errors: list[str] = []
+    warnings: list[str] = []
 
     if not body or len(body.strip()) < 100:
-        errors.append("Issue body is empty or too short — did you use the assessment report template?")
+        return False, ["Issue body is empty or very short — was the report template used?"], []
+
+    fields, unmatched = parse_issue_body(body)
+
+    for heading in unmatched:
+        warnings.append(
+            f"Unrecognised heading: '{heading}'. It does not match the template, "
+            f"so anything under it was not read."
+        )
+
+    if not fields:
+        errors.append(
+            "No template headings were found. Paste the full report template, "
+            "keeping every '### ' heading exactly as written."
+        )
         return False, errors, warnings
 
-    fields = parse_issue_body(body)
+    part2_ran = "yes" in fields.get("part2_triggered", "").strip().lower()
 
-    # Check required fields are present and non-empty
-    for field_id, name, section in REQUIRED_FIELDS:
-        value = fields.get(field_id, "").strip()
-        if not value or value in ["_No response_", "None", ""]:
-            errors.append(f"**{section}:** '{name}' is empty or missing")
-        elif field_id in MIN_LENGTH and len(value) < MIN_LENGTH[field_id]:
-            errors.append(
-                f"**{section}:** '{name}' appears too brief "
-                f"(minimum {MIN_LENGTH[field_id]} characters). "
-                f"Please provide more detail."
-            )
-        elif field_id in VALID_OPTIONS:
-            # Check the value matches one of the valid options
-            valid = VALID_OPTIONS[field_id]
-            if not any(opt.lower() in value.lower() for opt in valid):
-                errors.append(
-                    f"**{section}:** '{name}' has an unexpected value: '{value[:80]}'. "
-                    f"Expected one of: {', '.join(valid)}"
-                )
+    for field in FIELDS:
+        value = fields.get(field["id"], "")
+        required = field["required"]
 
-    # Check that severity is provided for any pitfall marked Present
-    for i in range(1, 10):
-        verdict_key = f"p{i}_verdict"
-        severity_key = f"p{i}_severity"
-        verdict = fields.get(verdict_key, "").strip()
-        severity = fields.get(severity_key, "").strip()
+        if required == "part2" and not part2_ran:
+            continue
 
-        if "present" in verdict.lower() and not severity:
+        if _is_empty(value):
+            if required:
+                errors.append(f"**{field['section']}:** '{field['heading']}' is empty or missing")
+            continue
+
+        _check_one(field, value, errors)
+
+    # Severity is expected wherever a consideration is marked Present
+    for n in CONSIDERATIONS:
+        verdict = fields.get(f"p{n}_verdict", "")
+        severity = fields.get(f"p{n}_severity", "")
+        if "present" in verdict.lower() and _is_empty(severity):
             warnings.append(
-                f"Pitfall {i} is marked Present but no severity is recorded. "
-                f"Please add a severity rating."
+                f"Consideration {n} is marked Present but no severity is recorded."
             )
 
-    # Check Part II fields if Part II is triggered
-    part2 = fields.get("part2_triggered", "").strip().lower()
-    if "yes" in part2:
-        for field_id in ["part2_pitfalls_addressed", "part2_fixes_applied",
-                         "part2_metrics", "part2_conclusion_verdict", "part2_interpretation"]:
-            value = fields.get(field_id, "").strip()
-            if not value or value in ["_No response_", ""]:
-                errors.append(
-                    f"**Section 4:** Part II is marked as triggered but '{field_id}' is empty."
-                )
+    return len(errors) == 0, errors, warnings
 
-    passed = len(errors) == 0
-    return passed, errors, warnings
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Output
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_comment(passed: bool, errors: list[str], warnings: list[str]) -> str:
+    lines = []
+    if passed:
+        lines += [
+            "## ✅ Report complete",
+            "",
+            "Every required field is filled in. This report is ready for review.",
+        ]
+    else:
+        lines += [
+            "## Report needs a few additions",
+            "",
+            f"{len(errors)} field(s) still need attention. Edit the issue and "
+            f"this check will run again.",
+            "",
+            "### To complete",
+        ]
+        lines += [f"- {e}" for e in errors]
+
+    if warnings:
+        lines += ["", "### Worth checking", ""]
+        lines += [f"- {w}" for w in warnings]
+
+    lines += [
+        "",
+        "_Automated completeness check. It confirms the fields are filled in; "
+        "it does not assess the analysis itself._",
+    ]
+    return '\n'.join(lines)
 
 
 def write_output(passed: bool, errors: list[str], warnings: list[str]):
-    """Write validation result as markdown and set GitHub Actions output."""
-
-    # Write markdown comment
-    lines = []
-    if passed:
-        lines.append("## ✅ report validation passed")
-        lines.append("")
-        lines.append(
-            "All required fields are complete. Your supervisor has been notified. "
-            "You can now request a review."
-        )
-    else:
-        lines.append("## ❌ report needs revision")
-        lines.append("")
-        lines.append(
-            f"Found **{len(errors)} error(s)** that must be fixed before this report can be accepted."
-        )
-        lines.append("")
-        lines.append("### Errors")
-        for error in errors:
-            lines.append(f"- {error}")
-
-    if warnings:
-        lines.append("")
-        lines.append("### Warnings")
-        lines.append("These are not blocking but should be addressed:")
-        for warning in warnings:
-            lines.append(f"- {warning}")
-
-    lines.append("")
-    lines.append(
-        "_This is an automated check. It verifies that all fields are complete "
-        "but does not assess the quality of your analysis. "
-        "Your supervisor will review the content._"
-    )
-
-    comment = '\n'.join(lines)
-
     with open('validation_result.md', 'w') as f:
-        f.write(comment)
+        f.write(build_comment(passed, errors, warnings))
 
-    # Set GitHub Actions output
     with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
         f.write(f"passed={'true' if passed else 'false'}\n")
         f.write(f"error_count={len(errors)}\n")
 
-    print(f"Validation {'PASSED' if passed else 'FAILED'}")
-    if errors:
-        print(f"Errors ({len(errors)}):")
-        for e in errors:
-            print(f"  - {e}")
-    if warnings:
-        print(f"Warnings ({len(warnings)}):")
-        for w in warnings:
-            print(f"  - {w}")
+    print(f"Validation {'PASSED' if passed else 'INCOMPLETE'}")
+    for e in errors:
+        print(f"  error:   {e}")
+    for w in warnings:
+        print(f"  warning: {w}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Template generation — keeps the drafting template in step with the table
+# ─────────────────────────────────────────────────────────────────────────────
+
+def emit_template() -> str:
+    lines = [
+        "<!-- Open Omics ML report template.",
+        "     Draft this file in your project repo, then paste the whole thing",
+        "     into a new issue on the central repo when it is ready.",
+        "     Keep every '### ' heading exactly as written. -->",
+        "",
+    ]
+    current_section = None
+    current_note = None
+
+    for field in FIELDS:
+        if field["section"] != current_section:
+            current_section = field["section"]
+            lines += ["", f"## {current_section}", ""]
+
+        note = field.get("note")
+        if note and note != current_note:
+            current_note = note
+            lines += [f"<!-- {note} -->", ""]
+
+        lines.append(f"### {field['heading']}")
+        lines.append("")
+        if "options" in field:
+            lines.append(f"<!-- one of: {' | '.join(field['options'])} -->")
+        elif field.get("hint"):
+            lines.append(f"<!-- {field['hint']} -->")
+        if field["required"] == "part2":
+            lines.append("<!-- only if Part II was carried out -->")
+        lines.append("")
+
+    return '\n'.join(lines).strip() + '\n'
 
 
 if __name__ == "__main__":
-    body = os.environ.get("ISSUE_BODY", "")
-    passed, errors, warnings = validate(body)
-    write_output(passed, errors, warnings)
+    if "--emit-template" in sys.argv:
+        print(emit_template())
+    else:
+        body = os.environ.get("ISSUE_BODY", "")
+        passed, errors, warnings = validate(body)
+        write_output(passed, errors, warnings)
