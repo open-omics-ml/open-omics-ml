@@ -1,13 +1,13 @@
-name: Audit Report
-description: Open Omics ML reanalysis audit report — complete one per study
-title: "Audit Report: [AUTHOR] [YEAR] — [BRIEF TITLE]"
-labels: ["audit-report"]
+name: Assessment Report
+description: Open Omics ML reanalysis Assessment report — complete one per study
+title: "Assessment Report: [AUTHOR] [YEAR] — [BRIEF TITLE]"
+labels: ["assessment-report"]
 body:
 
   - type: markdown
     attributes:
       value: |
-        ## Open Omics ML Audit Report
+        ## Open Omics ML Assessment Report
         Complete every section. If a section is not applicable, state this explicitly and explain why.
         Refer to the [pitfall reference document](../../docs/pitfall-reference.md) and [student guide](../../docs/student-guide.md) before filling this in.
 
@@ -158,13 +158,13 @@ body:
       description: What do you believe caused the difference? Ambiguous methods, missing data, software versions, possible error?
 
   # ─────────────────────────────────────────
-  # SECTION 3: PITFALL AUDIT
+  # SECTION 3: PITFALL Assessment
   # ─────────────────────────────────────────
 
   - type: markdown
     attributes:
       value: |
-        ## Section 3: Pitfall audit
+        ## Section 3: Pitfall assessment
         For each pitfall, select a verdict and provide evidence. Cite specific text from the methods section, supplementary materials, or code. Do not leave evidence fields blank.
 
   - type: markdown
@@ -625,7 +625,7 @@ body:
     id: summary_paragraph
     attributes:
       label: Summary paragraph
-      description: One paragraph suitable for inclusion in the meta-analysis paper. Describe the study, what was found in the audit, and what the reanalysis showed (if conducted). Use factual, constructive language.
+      description: One paragraph suitable for inclusion in the meta-analysis paper. Describe the study, what was found in the assessment, and what the reanalysis showed (if conducted). Use factual, constructive language.
     validations:
       required: true
 
