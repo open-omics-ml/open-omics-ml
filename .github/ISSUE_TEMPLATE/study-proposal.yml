@@ -1,6 +1,6 @@
 name: Study Proposal
 description: Propose a paper for reanalysis (external contributors and new cohort members)
-title: "Proposal: [AUTHOR] [YEAR] — [BRIEF TITLE]"
+title: "Proposal: [FIRST AUTHOR] [YEAR] — [BRIEF TITLE]"
 labels: ["study-proposal"]
 body:
 
@@ -14,17 +14,26 @@ body:
     id: citation
     attributes:
       label: Full citation
-      description: Author(s), year, title, journal, DOI
+      description: DOI
     validations:
       required: true
 
   - type: input
     id: data_link
     attributes:
-      label: Data availability
-      description: Link to publicly available dataset (GEO accession, Zenodo DOI, etc.)
+      label: Raw data availability
+      description: Link to publicly available dataset (GEO accession, Zenodo DOI, etc.) for raw reads
     validations:
       required: true
+
+  - type: input
+id: processed_data
+attributes:
+  label: Processed data availability
+  description: Are the process data available? E.g. methylation calls, gene expression counts
+validations:
+  required: true
+
 
   - type: dropdown
     id: omics_type
@@ -54,11 +63,18 @@ body:
       required: true
 
   - type: input
-    id: contributor
+    id: contributorname
     attributes:
-      label: Your name and institution
+      label: Your name
     validations:
       required: true
+
+    - type: input
+  id: contributorinstitution
+  attributes:
+    label: Institution
+  validations:
+    required: true
 
   - type: dropdown
     id: code_available
