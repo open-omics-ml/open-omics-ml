@@ -19,7 +19,7 @@ The studies you build on asked important biological questions and advanced the f
 
 Your reanalysis has two parts:
 
-**Part I — Reproduce and audit.** You reproduce the original analysis as closely as possible, then systematically audit it against a defined checklist of methodological pitfalls. This is the core deliverable and is sufficient for a complete project.
+**Part I — Reproduce and assess.** You reproduce the original analysis as closely as possible, then systematically assess it against a defined checklist of methodological pitfalls. This is the core deliverable and is sufficient for a complete project.
 
 **Part II — Reanalyse.** If the original results are reproducible but pitfalls are present, you reanalyse using more robust methods and report whether the main conclusion holds. Part II is triggered when Part I is successfully completed and pitfalls of medium or high severity are found.
 
@@ -27,7 +27,7 @@ Your reanalysis has two parts:
 
 ## Scope of this framework
 
-This framework audits the **machine learning** component of omics studies — specifically, how processed data matrices are used to train and evaluate models. It does not cover upstream bioinformatics processing (alignment, quantification, QC, normalisation pipelines).
+This framework assesses the **machine learning** component of omics studies — specifically, how processed data matrices are used to train and evaluate models. It does not cover upstream bioinformatics processing (alignment, quantification, QC, normalisation pipelines).
 
 This boundary is intentional:
 
@@ -52,7 +52,7 @@ Your paper must meet the following criteria:
 **Preferred**
 - Data is manageable in size (processable on a standard laptop or university HPC within reasonable time)
 - Code is available (even if you won't use it directly, it aids interpretation)
-- The ML task is classification or regression — clustering studies are harder to audit against this framework
+- The ML task is classification or regression — clustering studies are harder to assess against this framework
 
 **Not suitable**
 - Purely methods papers (benchmarks, new tool development) — these have different standards
@@ -77,7 +77,7 @@ Your pre-registration should cover:
 
 Go to [osf.io](https://osf.io), create a free account, and register a new project. Use the "OSF Preregistration" template. Link your registration DOI in your repo README once complete.
 
-Predictions do not need to be correct — the purpose is to commit to them before seeing results, not to get them right. Deviations from your pre-registered plan should be documented and justified in your audit report.
+Predictions do not need to be correct — the purpose is to commit to them before seeing results, not to get them right. Deviations from your pre-registered plan should be documented and justified in your assessment report.
 
 ## Step 3: Set up your repo
 
@@ -148,7 +148,7 @@ If not reproduced, diagnose why before proceeding. Common causes:
 
 ---
 
-## Step 6: Pitfall audit
+## Step 6: Pitfall assessment
 
 Work through each of the nine pitfalls in the [pitfall reference document](pitfall-reference.md). For each:
 
@@ -163,22 +163,22 @@ Be precise. "Unclear" means you genuinely cannot determine the answer from avail
 
 ---
 
-## Step 7: Submit your audit report
+## Step 7: Submit your assessment report
 
-Open an issue in your repo using the **Audit Report** issue template. Fill in every section. This is your primary submission document and feeds into the project dashboard.
+Open an issue in your repo using the **Assessment Report** issue template. Fill in every section. This is your primary submission document and feeds into the project dashboard.
 
 The issue template mirrors the reporting framework sections. Do not skip sections — if a section is not applicable, say so explicitly.
 
 Along with the issue, commit your Part I notebook to your repo. The notebook must include the commit hash of the central template it was based on in the configuration cell at the top.
 
-> **Supervisor checkpoint 2:** Your supervisor will review your audit report and Part I notebook before you proceed to Part II. Wait for the `supervisor-approved` label on your issue before continuing.
+> **Supervisor checkpoint 2:** Your supervisor will review your assessment report and Part I notebook before you proceed to Part II. Wait for the `supervisor-approved` label on your issue before continuing.
 
 ---
 
 ## Step 8: Part II — Reanalysis (if triggered)
 
 Part II is triggered when:
-- Part I is complete and your audit report has been reviewed
+- Part I is complete and your assessment report has been reviewed
 - At least one pitfall of **high** or **medium** severity is present
 - The original result was **reproduced** or **partially reproduced** (if not reproduced, the cause must first be understood)
 
@@ -209,7 +209,7 @@ Where possible, fix pitfalls sequentially and record performance after each fix.
 
 ## Submission checklist
 
-Before opening your final audit report issue:
+Before opening your final assessment report issue:
 
 - [ ] OSF pre-registration DOI is linked in repo README
 - [ ] Repo README is complete
