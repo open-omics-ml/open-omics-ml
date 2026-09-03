@@ -69,11 +69,11 @@ body:
       required: true
 
     - type: input
-  id: contributorinstitution
-  attributes:
-    label: Institution
-  validations:
-    required: true
+    id: contributorinstitution
+    attributes:
+      label: Institution
+    validations:
+      required: true
 
   - type: dropdown
     id: code_available
