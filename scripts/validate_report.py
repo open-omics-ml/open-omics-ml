@@ -140,6 +140,10 @@ BY_ID = {f["id"]: f for f in FIELDS}
 
 EMPTY_VALUES = {"", "_no response_", "none", "n/a", "tbd", "..."}
 
+# A handful of headings (e.g. "Full citation") also appear on the study proposal
+# form, so one match is not enough to call an issue a report. Require several.
+MIN_HEADINGS_FOR_REPORT = 5
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Parsing
@@ -299,13 +303,21 @@ def build_comment(passed: bool, errors: list[str], warnings: list[str]) -> str:
     return '\n'.join(lines)
 
 
-def write_output(passed: bool, errors: list[str], warnings: list[str]):
+def write_output(body: str, passed: bool, errors: list[str], warnings: list[str]):
+    # Lets the workflow run on every issue but stay silent on non-reports.
+    is_report = len(parse_issue_body(body)[0]) >= MIN_HEADINGS_FOR_REPORT
+
     with open('validation_result.md', 'w') as f:
         f.write(build_comment(passed, errors, warnings))
 
     with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
+        f.write(f"is_report={'true' if is_report else 'false'}\n")
         f.write(f"passed={'true' if passed else 'false'}\n")
         f.write(f"error_count={len(errors)}\n")
+
+    if not is_report:
+        print("No report template headings found — not a report issue, nothing to do.")
+        return
 
     print(f"Validation {'PASSED' if passed else 'INCOMPLETE'}")
     for e in errors:
@@ -358,4 +370,4 @@ if __name__ == "__main__":
     else:
         body = os.environ.get("ISSUE_BODY", "")
         passed, errors, warnings = validate(body)
-        write_output(passed, errors, warnings)
+        write_output(body, passed, errors, warnings)
