@@ -1,0 +1,100 @@
+name: Check Proposal DOI
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+jobs:
+  check:
+    if: contains(github.event.issue.labels.*.name, 'study-proposal')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const DOI_RE = /10\.\d{4,9}\/[^\s"'<>,;)\]]+/gi;
+
+            const normalise = (d) =>
+              d.toLowerCase().replace(/[.,;:)\]]+$/, '');
+
+            const doisIn = (text) =>
+              [...new Set([...(text || '').matchAll(DOI_RE)].map(m => normalise(m[0])))];
+
+            const mine = doisIn(context.payload.issue.body);
+            if (mine.length === 0) {
+              core.info('No DOI found in this proposal — nothing to compare.');
+              return;
+            }
+            core.info(`DOIs in this proposal: ${mine.join(', ')}`);
+
+            const all = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'study-proposal',
+              state: 'all',
+              per_page: 100,
+            });
+
+            const matches = [];
+            for (const issue of all) {
+              if (issue.number === context.issue.number) continue;
+              if (issue.pull_request) continue;
+              const theirs = doisIn(issue.body);
+              const shared = mine.filter(d => theirs.includes(d));
+              if (shared.length) {
+                matches.push({ number: issue.number, state: issue.state, doi: shared[0] });
+              }
+            }
+
+            const marker = '<!-- doi-check -->';
+
+            // Remove any previous comment from this check so edits don't stack up
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+            for (const c of comments) {
+              if (c.user.type === 'Bot' && c.body.includes(marker)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: c.id,
+                });
+              }
+            }
+
+            if (matches.length === 0) {
+              core.info('No existing proposal uses this DOI.');
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'possible-duplicate',
+              }).catch(() => {});
+              return;
+            }
+
+            const list = matches
+              .map(m => `- #${m.number} (${m.state}) — \`${m.doi}\``)
+              .join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `${marker}\n### This DOI has come up before\n\n${list}\n\n` +
+                    `Worth a look before starting — the earlier proposal may have ` +
+                    `notes on data access or scope that save you time. A maintainer ` +
+                    `will confirm whether this one can go ahead.`,
+            });
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['possible-duplicate'],
+            });
