@@ -199,7 +199,6 @@ Where possible, fix pitfalls sequentially and record performance after each fix.
 
 Before opening your final assessment report issue:
 
-- [ ] OSF pre-registration DOI is linked in repo README
 - [ ] Repo README is complete
 - [ ] Data access scripts are committed and documented
 - [ ] Conda environment file is committed (`environment/environment.yml` or `renv.lock`)
